@@ -1,0 +1,24 @@
+services:
+  web:
+    build: .
+    command: sh -c "python manage.py migrate && daphne -b 0.0.0.0 -p 8000 config.asgi:application"
+    ports: ["8000:8000"]
+    env_file: .env
+    depends_on: [db, redis]
+  worker:
+    build: .
+    command: celery -A config worker -l info
+    env_file: .env
+    depends_on: [db, redis]
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: kavana_demo
+      POSTGRES_USER: demo
+      POSTGRES_PASSWORD: demo
+    volumes: ["postgres_data:/var/lib/postgresql/data"]
+  redis:
+    image: redis:7-alpine
+    ports: ["6379:6379"]
+volumes:
+  postgres_data:
